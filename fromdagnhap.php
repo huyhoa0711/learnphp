@@ -1,21 +1,36 @@
 <?php 
 	function user (){
-		$ten = $_POST['name'];
-		$email = $_POST['email'];
-		$phone = $_POST['phone'];
-		$address = $_POST['address'];
+		$ten = null;
+		$email = null;
+		$phone = null;
+		$address = null;
+
 		
 		if(empty($_POST))return ;
-		if(empty($_POST['name'])){
+		if(!empty($_POST['action']) && $_POST['action'] == 'delete' ){
+			$delete = $_POST['action'];
+			$id = $_POST['id'];
+			delete($id);
+			return;	
+		}
+		if(!empty($_POST['action']) && $_POST['action'] == 'update' ){
+			$delete = $_POST['action'];
+			$id = $_POST['id'];
+			update($id);
+			return;	
+		}
+
+
+		if(!empty($_POST['name'])){
 			$ten = $_POST['name'];
 		}
-		if(empty($_POST['email'])){
+		if(!empty($_POST['email'])){
 			$email = $_POST['email'];
 		}
-		if(empty($_POST['phone'])){
+		if(!empty($_POST['phone'])){
 			$phone = $_POST['phone'];
 		}
-		if(empty($_POST['address'])){
+		if(!empty($_POST['address'])){
 			$address = $_POST['address'];
 		}
 		insert($ten, $email, $phone, $address);
@@ -29,9 +44,13 @@
 		  echo "Failed to connect to MySQL: " . $mysqli -> connect_error;
 		  exit();
 		}
+		$timKiem = $_GET['search'];
+		var_dump($timKiem);
+		echo "SELECT * FROM inputt where name like '%$timKiem%'";
 
 		// Perform query
-		if ($result = $mysqli -> query("SELECT * FROM inputt")) {
+		if ($result = $mysqli -> query("SELECT * FROM inputt where ten like '%$timKiem%'")) {
+
 		  echo "Returned rows are: " . $result -> num_rows;
 		  // Free result set
 		   $bien = $result -> fetch_all();
@@ -59,6 +78,28 @@
 		$stmt -> close();
 		$mysqli -> close();
 	}
+	function delete($id){
+		$mysqli = new mysqli("localhost","root","","qlhs");
+
+		// Check connection
+		if ($mysqli -> connect_errno) {
+		  echo "Failed to connect to MySQL: " . $mysqli -> connect_error;
+		  exit();
+		}
+
+		$stmt = $mysqli -> prepare("delete from inputt where id = ?");
+		$stmt -> bind_param("i", $id);
+
+		// set parameters and execute
+		$hoa = $stmt -> execute();
+
+		$stmt -> close();
+		$mysqli -> close();
+	}
+	function update(){
+		echo 'cap nhật';
+		die();
+	}
 ?>	
 <!DOCTYPE html>
 <html>
@@ -68,12 +109,17 @@
 	<title></title>
 </head>
 <body>
+	<form>
+		search:<input type="text" name="search" value="<?php echo !empty($_GET['search'])
+		? $_GET['search'] : ''; ?>">
+		<input type="submit" name="timkiem" value="tìm kiếm"/><br>
+	</form>
 	<form method="POST">
-		ID:<input type="text" class="form-control" name="id"><br>
 		Name:<input type="text" class="form-control" name="name"><br>
 		email:<input type="text" class="form-control" name="email"><br>
 		phone:<input type="text" class="form-control" name="phone"><br>
 		address:<input type="text" class="form-control" name="address"><br>
+
 		<input type="submit" name="form_click" value="Gửi Dữ Liệu"/>
 	</form>
 	<table class="table table-striped table-dark">
@@ -84,6 +130,7 @@
 			<td>email</td>
 			<td>phone</td>
 			<td>address</td>
+			<td>delete</td>
 		</tr>
 		<?php foreach($layDuLieu as $key => $value) {?>
 			<tr>
@@ -92,6 +139,18 @@
 				<td><?php echo $value[2] ?></td>
 				<td><?php echo $value[3] ?></td>
 				<td><?php echo $value[4] ?></td>
+				<td>
+					<form method="POST">
+						<input type="hidden" name="id" value="<?php echo $value[0]?>">
+						<input type="hidden" name="action" value="delete">
+						<input type="submit" name="form_click" value="xóa"/>
+					</form>
+					<form method="POST">
+						<input type="hidden" name="id" value="<?php echo $value[0]?>">
+						<input type="hidden" name="action" value="update">
+						<input type="submit" name="capnhat" value="cập nhật"/>
+					</form>
+				</td>
 			</tr>	
      	<?php } ?>	
 	</table>
